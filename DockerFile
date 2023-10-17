@@ -1,19 +1,29 @@
+# Use an official Ubuntu image as a build stage
 FROM ubuntu:latest AS BUILD
 
-RUN apt-get update
+# Update and install required packages
+RUN apt-get update && apt-get install -y openjdk-17-jdk maven
 
-RUN apt-get install openjdk-17 -y
+# Set the working directory
+WORKDIR /app
 
+# Copy the project source code into the container
 COPY . .
 
-RUN apt-get install maven -y
+# Build the application using Maven
+RUN mvn clean install
 
-RUN mvn clean install 
+# Use a smaller image for the final build
 FROM openjdk:17-jdk-slim
 
+# Expose the port your application will run on
 EXPOSE 8080
 
-COPY --from=build /target/todolist-0.0.1.jar app.jar
+# Set the working directory
+WORKDIR /app
 
-ENTRYPOINT [ "java" , "-jar", "app.jar"]
+# Copy the JAR file from the build stage to the final image
+COPY --from=BUILD /path/to/your/target/todolist-0.0.1.jar app.jar
 
+# Define the command to run your application
+CMD ["java", "-jar", "app.jar"]
